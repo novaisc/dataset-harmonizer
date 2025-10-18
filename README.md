@@ -53,12 +53,16 @@ Key sections in `parameters.yaml`:
 
 1. Prepare your input NetCDF datasets.
 
-2. Open `parameters.yaml` and edit paths, variables, and transformation settings as needed.
+2. Open `parameters.yaml` and edit paths, variables, and transformation settings as needed.  
+   All transformations (interpolation, combination, renaming, etc.) are controlled via this configuration file.
 
 3. Run the program:
 
 ```bash
-python app.py
+make
 ```
-4. The harmonized dataset will be saved to the folder specified in the configuration (output.directory).
-
+To run the program and explicitly generate the output file, use:
+```bash
+make output
+```
+4. The harmonized dataset will be saved to the folder specified in output.directory in the configuration file.
