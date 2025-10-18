@@ -1,0 +1,141 @@
+# Configuration file for harmonizing datasets.
+# Current settings are tailored for NEMO output, interpolating multiple grid variables to the T grid.
+# Transformations are applied sequentially: output of one step is input for the next.
+# Example: after interpolation and combination, you get a single dataset; renaming is then applied to this combined dataset.
+
+# =============================================
+# Input data configuration
+# Specify files using a glob pattern or single file.
+# =============================================
+input_data:
+  data_paths:
+    U: NEMO/ANHA4-EPM520/ANHA4-EPM520_y2006m01d**_gridU.nc
+    V: NEMO/ANHA4-EPM520/ANHA4-EPM520_y2006m01d**_gridV.nc
+    T: NEMO/ANHA4-EPM520/ANHA4-EPM520_y2006m01d**_gridT.nc
+    W: NEMO/ANHA4-EPM520/ANHA4-EPM520_y2006m01d**_gridW.nc
+    icemod: NEMO/ANHA4-EPM520/ANHA4-EPM520_y2006m01d**_icemod.nc
+
+# =============================================
+# Data transformations
+# Specify transformations to apply to input data.
+# =============================================
+transformations:
+  # Interpolation to a common grid (target: T grid).
+  # target_reference_variable provides dimensions for interpolation.
+  # source_var: variable to interpolate. dims_mapping: maps source dimensions to target dimensions.
+  interpolation:
+    target_grid: T
+    target_reference_variable: "votemper"
+    variables:
+      U:
+        source_var: "vozocrtx"
+        dims_mapping:
+          x_grid_U: x_grid_T
+      V:
+        source_var: "vomecrty"
+        dims_mapping:
+          x_grid_V: x_grid_T
+      W:
+        source_var: "vovecrtz"
+        dims_mapping:
+          grid_W_3D_inner: deptht
+        
+  # Combine additional datasets with the interpolated dataset.
+  # Here, the icemod dataset is combined, mapping its variables to the target grid.
+  combination:
+    icemod:
+      variables:
+        iicevelu: 
+        iicevelv:
+        ileadfra:
+          dims_mapping:
+            y_grid_T_2D_inner: y_grid_T
+            x_grid_T_2D_inner: x_grid_T
+        ivolume:
+          dims_mapping:
+            y_grid_T_2D_inner: y_grid_T
+            x_grid_T_2D_inner: x_grid_T
+
+  # Renaming of variables, coordinates, and dimensions.
+  # This step occurs after interpolation and combination (i.e., on the combined dataset).
+  renaming:
+    deptht: depth
+    x_grid_T: X
+    y_grid_T: Y
+    nav_lat_grid_T: lat
+    nav_lon_grid_T: lon
+    votemper: temperature
+    vosaline: salinity
+    iicevelu: ice_u
+    iicevelv: ice_v
+    ivolume: ice_thickness
+    ileadfra: ice_concentration
+
+  # Attributes to add to file and variables.
+  attributes_to_add:
+    file: 
+      title: NEMO ANHA4-EPM520 + OpenDrift
+      institution: University of Alberta
+      source: NEMO ocean model
+      comment: Processed for oil spill simulation using OpenDrift.
+    variables:
+      u:
+        standard_name: "x_sea_water_velocity"
+      v:
+        standard_name: "y_sea_water_velocity"
+      w:
+        standard_name: "upward_sea_water_velocity"
+        long_name: "Sea water z velocity"
+        units: "meter second-1"
+        time: "time_counter"
+      depth:
+        standard_name: "depth"
+        long_name: "depth"
+        axis: "Z"
+      salinity:
+        standard_name: "sea_water_salinity"
+      ice_u:
+        standard_name: "x_sea_ice_velocity"
+      ice_v:
+        standard_name: "y_sea_ice_velocity"
+      ice_thickness:
+        standard_name: "sea_ice_thickness"
+      ice_concentration:
+        standard_name: "sea_ice_area_fraction"
+
+  # Coordinates to add to each variable in the combined dataset.
+  coords_to_add:
+    u: ["X", "Y"]
+    v: ["X", "Y"]
+    w: ["X", "Y"]
+    temperature: ["X", "Y"]
+    salinity: ["X", "Y"]
+    ice_u: ["X", "Y"]
+    ice_v: ["X", "Y"]
+
+  # Slice dataset to region of interest.
+  slicing:
+    region_of_interest:
+      Y: [530, 750]
+      X: [120, 430]
+
+  # Keep only selected variables and coordinates.
+  keep:
+    variables: ["u", "v", "w", "temperature", "salinity", "sossheig", "land_binary_mask", "depth", "ice_u", "ice_v", "ice_thickness", "ice_concentration"]
+    coords: ["X", "Y", "depth", "time_counter", "time_centered", "lon", "lat"]
+
+# =============================================
+# Xarray
+# =============================================
+xarray:
+  engine: netcdf4               # Engine for reading NetCDF
+  reader:
+    combine: "by_coords"       # Combine multiple files by coordinates
+    data_vars: "all"           # Load all variables
+
+# =============================================
+# Output configuration
+# =============================================
+output: 
+  directory: "dataset_harmonizer/output/"
+  file_name: "anha4_epm520_jan2006_harmonized.nc"
