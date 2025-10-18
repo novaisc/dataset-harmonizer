@@ -74,10 +74,8 @@ transformations:
   # Attributes to add to file and variables.
   attributes_to_add:
     file: 
-      title: NEMO ANHA4-EPM520 + OpenDrift
-      institution: University of Alberta
+      title: NEMO ANHA4-EPM520
       source: NEMO ocean model
-      comment: Processed for oil spill simulation using OpenDrift.
     variables:
       u:
         standard_name: "x_sea_water_velocity"
