@@ -94,7 +94,7 @@ class DatasetHandler:
         for var, coords in self.coords_to_add.items():
             if var in ds:
                 for coord in coords:
-                    ds[var] = ds[var].assign_coords({coord: ds[coord].data})
+                    ds[var] = ds[var].assign_coords({coord: ds[coord]})
         return ds
 
     def __rename_variables(self, ds: xr.Dataset) -> xr.Dataset:
@@ -171,6 +171,12 @@ class DatasetHandler:
 
         return combined_ds
 
+    def __convert_dim_size(self, ds):
+        for dim in ["X", "Y"]:
+            ds[dim] = ds[dim].astype("int32")
+        return ds
+
+
     def create_combined_dataset(self, datasets: List[xr.Dataset]) -> xr.Dataset:
         start = time()
         print("Starting interpolation...")
@@ -215,5 +221,7 @@ class DatasetHandler:
         ds = self.__select_subset_of_data(ds)
         end = time()
         print(f"Subset selection took {end - start} seconds")
+
+        ds = self.__convert_dim_size(ds)
 
         return ds
