@@ -40,6 +40,7 @@ class Keep:
 
 @dataclass
 class Transformations:
+    combine_period: str
     interpolation: Interpolation
     combination: dict
     renaming: dict
@@ -59,6 +60,7 @@ class Reader:
 class XarrayParameters:
     engine: str
     reader: Reader
+    chunks: dict
 
 
 @dataclass
@@ -98,6 +100,7 @@ class ConfigReader:
                 data_paths=data["input_data"]["data_paths"],
             ),
             transformations=Transformations(
+                combine_period=data["transformations"]["combine_period"],
                 interpolation=Interpolation(
                     data["transformations"]["interpolation"]["target_grid"],
                     data["transformations"]["interpolation"]["target_reference_variable"],
@@ -113,6 +116,7 @@ class ConfigReader:
             xarray_parameters=XarrayParameters(
                 engine=data["xarray"]["engine"],
                 reader=Reader(**data["xarray"]["reader"]),
+                chunks=data["xarray"]["chunks"],
             ),
             output=Output(**data["output"])
         )

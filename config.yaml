@@ -9,17 +9,33 @@
 # =============================================
 input_data:
   data_paths:
-    U: NEMO/ANHA4-EPM520/ANHA4-EPM520_y2006m01d**_gridU.nc
-    V: NEMO/ANHA4-EPM520/ANHA4-EPM520_y2006m01d**_gridV.nc
-    T: NEMO/ANHA4-EPM520/ANHA4-EPM520_y2006m01d**_gridT.nc
-    W: NEMO/ANHA4-EPM520/ANHA4-EPM520_y2006m01d**_gridW.nc
-    icemod: NEMO/ANHA4-EPM520/ANHA4-EPM520_y2006m01d**_icemod.nc
+    U:      /project/6007519/pmyers/ANHA4/ANHA4-EPM522-Daily-S/ANHA4-EPM522_y2002m**d**_gridU.nc
+    V:      /project/6007519/pmyers/ANHA4/ANHA4-EPM522-Daily-S/ANHA4-EPM522_y2002m**d**_gridV.nc
+    T:      /project/6007519/pmyers/ANHA4/ANHA4-EPM522-Daily-S/ANHA4-EPM522_y2002m**d**_gridT.nc
+    W:      /project/6007519/pmyers/ANHA4/ANHA4-EPM522-Daily-S/ANHA4-EPM522_y2002m**d**_gridW.nc
+    icemod: /project/6007519/pmyers/ANHA4/ANHA4-EPM522-Daily-S/ANHA4-EPM522_y2002m**d**_icemod.nc
+    # U:      /project/6007519/pmyers/ANHA4/ANHA4-EPM522-Daily-S/ANHA4-EPM522_y2002m01d18_gridU.nc
+    # V:      /project/6007519/pmyers/ANHA4/ANHA4-EPM522-Daily-S/ANHA4-EPM522_y2002m01d18_gridV.nc
+    # T:      /project/6007519/pmyers/ANHA4/ANHA4-EPM522-Daily-S/ANHA4-EPM522_y2002m01d18_gridT.nc
+    # W:      /project/6007519/pmyers/ANHA4/ANHA4-EPM522-Daily-S/ANHA4-EPM522_y2002m01d18_gridW.nc
+    # icemod: /project/6007519/pmyers/ANHA4/ANHA4-EPM522-Daily-S/ANHA4-EPM522_y2002m01d18_icemod.nc
+    # U:      /project/6007519/pmyers/ANHA4/ANHA4-EPM522-S/ANHA4-EPM522_y****m**d**_gridU.nc
+    # V:      /project/6007519/pmyers/ANHA4/ANHA4-EPM522-S/ANHA4-EPM522_y****m**d**_gridV.nc
+    # T:      /project/6007519/pmyers/ANHA4/ANHA4-EPM522-S/ANHA4-EPM522_y****m**d**_gridT.nc
+    # W:      /project/6007519/pmyers/ANHA4/ANHA4-EPM522-S/ANHA4-EPM522_y****m**d**_gridW.nc
+    # icemod: /project/6007519/pmyers/ANHA4/ANHA4-EPM522-S/ANHA4-EPM522_y****m**d**_icemod.nc
+    # U:      /home/caion/projects/rrg-pmyers-ad/pmyers/ANHA4/ANHA4-EPM522-S/ANHA4-EPM522_y2006m01d**_gridU.nc
+    # V:      /home/caion/projects/rrg-pmyers-ad/pmyers/ANHA4/ANHA4-EPM522-S/ANHA4-EPM522_y2006m01d**_gridV.nc
+    # T:      /home/caion/projects/rrg-pmyers-ad/pmyers/ANHA4/ANHA4-EPM522-S/ANHA4-EPM522_y2006m01d**_gridT.nc
+    # W:      /home/caion/projects/rrg-pmyers-ad/pmyers/ANHA4/ANHA4-EPM522-S/ANHA4-EPM522_y2006m01d**_gridW.nc
+    # icemod: /home/caion/projects/rrg-pmyers-ad/pmyers/ANHA4/ANHA4-EPM522-S/ANHA4-EPM522_y2006m01d**_icemod.nc
 
 # =============================================
 # Data transformations
 # Specify transformations to apply to input data.
 # =============================================
 transformations:
+  combine_period: day # day, month, year
   # Interpolation to a common grid (target: T grid).
   # target_reference_variable provides dimensions for interpolation.
   # source_var: variable to interpolate. dims_mapping: maps source dimensions to target dimensions.
@@ -114,8 +130,8 @@ transformations:
   # Slice dataset to region of interest.
   slicing:
     region_of_interest:
-      Y: [530, 750]
-      X: [120, 430]
+      X: [116, 430]
+      Y: [520, 750]
 
   # Keep only selected variables and coordinates.
   keep:
@@ -130,10 +146,12 @@ xarray:
   reader:
     combine: "by_coords"       # Combine multiple files by coordinates
     data_vars: "all"           # Load all variables
+  chunks:
+    time_counter: 10
 
 # =============================================
 # Output configuration
 # =============================================
 output: 
-  directory: "dataset_harmonizer/output/"
-  file_name: "anha4_epm520_jan2006_harmonized.nc"
+  directory: "output/"
+  file_name: "combined_ds"

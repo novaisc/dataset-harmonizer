@@ -1,1 +1,2 @@
 from dataset_harmonizer.config.config_reader import ConfigReader
+from dataset_harmonizer.config.parameters import DATE_PATTERN

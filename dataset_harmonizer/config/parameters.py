@@ -1,0 +1,1 @@
+DATE_PATTERN = r"y\d{4}m\d{2}d\d{2}"
