@@ -6,15 +6,6 @@ from dataset_harmonizer.utils import save_dataset, create_path
 
 from tqdm import tqdm
 
-def open_func():
-    import xarray as xr
-    import os
-    folder = "/home/caion/projects/rrg-pmyers-ad/caio/DatasetHarmonizer/output/x_116_430-y_520_750/2002/"
-    files = [os.path.join(folder, f) for f in os.listdir(folder) if f.endswith(".nc")]
-    for file in files:
-        ds = xr.open_dataset(file)
-        ds.close()
-
 
 def main(config_file: str):
     config = ConfigReader.from_yaml(config_file)
@@ -33,29 +24,34 @@ def main(config_file: str):
         keep=config.transformations.keep,
     )
 
-    paths = config.input_data.data_paths
-    path_groups = dr.group_files_by_date(paths)
-    for _, path_group in tqdm(path_groups):
-        datasets = dr.read_datasets(path_group)
+    grid_paths = config.input_data.grid_file_paths
+    additional_paths = config.input_data.additional_paths
 
-        combined_ds = dh.create_combined_dataset(datasets)
+    path_groups = dr.group_files_by_date_period(grid_paths)
+
+    additional_datasets = dr.read_additional_files(additional_paths)
+
+    for _, path_group in tqdm(path_groups):
+        grid_datasets = dr.read_grid_files(path_group)
+
+        combined_ds = dh.create_combined_dataset(grid_datasets, additional_datasets)
 
         region_interest_x_0, region_interest_x_1 = config.transformations.slicing.region_of_interest["X"]
         region_interest_y_0, region_interest_y_1 = config.transformations.slicing.region_of_interest["Y"]
 
-        year = path_group['year'].iloc[0]
-        month = path_group['month'].iloc[0]
-        day = path_group['day'].iloc[0]
-
-        additional_folders = f"x_{region_interest_x_0}_{region_interest_x_1}-y_{region_interest_y_0}_{region_interest_y_1}/{year}"
+        year = path_group["year"].iloc[0]
+        month = path_group["month"].iloc[0]
+        day = path_group["day"].iloc[0]
 
         period = config.transformations.combine_period
         base_name = config.output.file_name
 
+        additional_folders = f"x_{region_interest_x_0}_{region_interest_x_1}-y_{region_interest_y_0}_{region_interest_y_1}/"
+
         patterns = {
-            "day":   f"-y{year}m{month}d{day}",
+            "day": f"-y{year}m{month}d{day}",
             "month": f"-y{year}m{month}",
-            "year":  f"-y{year}",
+            "year": f"-y{year}",
         }
 
         filename = f"{base_name}{patterns[period]}"

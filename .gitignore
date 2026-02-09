@@ -1,5 +1,7 @@
 __pycache__/
 dataset_harmonizer/output/*
+output/*
+!output/.gitkeep
 .venv/
 venv/
 *.nc

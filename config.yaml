@@ -8,34 +8,21 @@
 # Specify files using a glob pattern or single file.
 # =============================================
 input_data:
-  data_paths:
-    U:      /project/6007519/pmyers/ANHA4/ANHA4-EPM522-Daily-S/ANHA4-EPM522_y2002m**d**_gridU.nc
-    V:      /project/6007519/pmyers/ANHA4/ANHA4-EPM522-Daily-S/ANHA4-EPM522_y2002m**d**_gridV.nc
-    T:      /project/6007519/pmyers/ANHA4/ANHA4-EPM522-Daily-S/ANHA4-EPM522_y2002m**d**_gridT.nc
-    W:      /project/6007519/pmyers/ANHA4/ANHA4-EPM522-Daily-S/ANHA4-EPM522_y2002m**d**_gridW.nc
-    icemod: /project/6007519/pmyers/ANHA4/ANHA4-EPM522-Daily-S/ANHA4-EPM522_y2002m**d**_icemod.nc
-    # U:      /project/6007519/pmyers/ANHA4/ANHA4-EPM522-Daily-S/ANHA4-EPM522_y2002m01d18_gridU.nc
-    # V:      /project/6007519/pmyers/ANHA4/ANHA4-EPM522-Daily-S/ANHA4-EPM522_y2002m01d18_gridV.nc
-    # T:      /project/6007519/pmyers/ANHA4/ANHA4-EPM522-Daily-S/ANHA4-EPM522_y2002m01d18_gridT.nc
-    # W:      /project/6007519/pmyers/ANHA4/ANHA4-EPM522-Daily-S/ANHA4-EPM522_y2002m01d18_gridW.nc
-    # icemod: /project/6007519/pmyers/ANHA4/ANHA4-EPM522-Daily-S/ANHA4-EPM522_y2002m01d18_icemod.nc
-    # U:      /project/6007519/pmyers/ANHA4/ANHA4-EPM522-S/ANHA4-EPM522_y****m**d**_gridU.nc
-    # V:      /project/6007519/pmyers/ANHA4/ANHA4-EPM522-S/ANHA4-EPM522_y****m**d**_gridV.nc
-    # T:      /project/6007519/pmyers/ANHA4/ANHA4-EPM522-S/ANHA4-EPM522_y****m**d**_gridT.nc
-    # W:      /project/6007519/pmyers/ANHA4/ANHA4-EPM522-S/ANHA4-EPM522_y****m**d**_gridW.nc
-    # icemod: /project/6007519/pmyers/ANHA4/ANHA4-EPM522-S/ANHA4-EPM522_y****m**d**_icemod.nc
-    # U:      /home/caion/projects/rrg-pmyers-ad/pmyers/ANHA4/ANHA4-EPM522-S/ANHA4-EPM522_y2006m01d**_gridU.nc
-    # V:      /home/caion/projects/rrg-pmyers-ad/pmyers/ANHA4/ANHA4-EPM522-S/ANHA4-EPM522_y2006m01d**_gridV.nc
-    # T:      /home/caion/projects/rrg-pmyers-ad/pmyers/ANHA4/ANHA4-EPM522-S/ANHA4-EPM522_y2006m01d**_gridT.nc
-    # W:      /home/caion/projects/rrg-pmyers-ad/pmyers/ANHA4/ANHA4-EPM522-S/ANHA4-EPM522_y2006m01d**_gridW.nc
-    # icemod: /home/caion/projects/rrg-pmyers-ad/pmyers/ANHA4/ANHA4-EPM522-S/ANHA4-EPM522_y2006m01d**_icemod.nc
+  grid_file_paths:
+    U:      /project/6007519/pmyers/ANHA4/ANHA4-EPM522-S/ANHA4-EPM522_y20**m**d**_gridU.nc
+    V:      /project/6007519/pmyers/ANHA4/ANHA4-EPM522-S/ANHA4-EPM522_y20**m**d**_gridV.nc
+    T:      /project/6007519/pmyers/ANHA4/ANHA4-EPM522-S/ANHA4-EPM522_y20**m**d**_gridT.nc
+    W:      /project/6007519/pmyers/ANHA4/ANHA4-EPM522-S/ANHA4-EPM522_y20**m**d**_gridW.nc
+    icemod: /project/6007519/pmyers/ANHA4/ANHA4-EPM522-S/ANHA4-EPM522_y20**m**d**_icemod.nc
+  additonal_paths:
+    mask:   /home/caion/projects/rrg-pmyers-ad/ANHA4-I/ANHA4_mesh_mask.nc 
 
 # =============================================
 # Data transformations
 # Specify transformations to apply to input data.
 # =============================================
 transformations:
-  combine_period: day # day, month, year
+  combine_period: year # day, month, year
   # Interpolation to a common grid (target: T grid).
   # target_reference_variable provides dimensions for interpolation.
   # source_var: variable to interpolate. dims_mapping: maps source dimensions to target dimensions.
@@ -44,17 +31,17 @@ transformations:
     target_reference_variable: "votemper"
     variables:
       U:
-        source_var: "vozocrtx"
-        dims_mapping:
-          x_grid_U: x_grid_T
+        - source_var: "vozocrtx"
+          dims_mapping:
+            x_grid_U: x_grid_T
       V:
-        source_var: "vomecrty"
-        dims_mapping:
-          x_grid_V: x_grid_T
+        - source_var: "vomecrty"
+          dims_mapping:
+            x_grid_V: x_grid_T
       W:
-        source_var: "vovecrtz"
-        dims_mapping:
-          grid_W_3D_inner: deptht
+        - source_var: "vovecrtz"
+          dims_mapping:
+            grid_W_3D_inner: deptht
         
   # Combine additional datasets with the interpolated dataset.
   # Here, the icemod dataset is combined, mapping its variables to the target grid.
@@ -67,7 +54,7 @@ transformations:
           dims_mapping:
             y_grid_T_2D_inner: y_grid_T
             x_grid_T_2D_inner: x_grid_T
-        ivolume:
+        iicethic:
           dims_mapping:
             y_grid_T_2D_inner: y_grid_T
             x_grid_T_2D_inner: x_grid_T
@@ -78,13 +65,19 @@ transformations:
     deptht: depth
     x_grid_T: X
     y_grid_T: Y
+    x_grid_T_2D_inner: X
+    y_grid_T_2D_inner: Y
     nav_lat_grid_T: lat
     nav_lon_grid_T: lon
     votemper: temperature
+    sohmld: ocean_mixed_layer_thickness
     vosaline: salinity
+    vomecrty: v
+    vozocrtx: u
+    vovecrtz: w
     iicevelu: ice_u
     iicevelv: ice_v
-    ivolume: ice_thickness
+    iicethic: ice_thickness
     ileadfra: ice_concentration
 
   # Attributes to add to file and variables.
@@ -94,28 +87,38 @@ transformations:
       source: NEMO ocean model
     variables:
       u:
+        units: "meter second-1"
         standard_name: "x_sea_water_velocity"
       v:
+        units: "meter second-1"
         standard_name: "y_sea_water_velocity"
       w:
         standard_name: "upward_sea_water_velocity"
-        long_name: "Sea water z velocity"
+        long_name: "ocean vertical velocity"
         units: "meter second-1"
         time: "time_counter"
+      sossheig:
+        standard_name: sea_surface_elevation
+      ocean_mixed_layer_thickness:
+        standard_name: ocean_mixed_layer_thickness
+        units: m
       depth:
-        standard_name: "depth"
-        long_name: "depth"
-        axis: "Z"
+        standard_name: depth
+        long_name: depth
+        axis: Z
+      temperature:
+        units: Celsius
       salinity:
-        standard_name: "sea_water_salinity"
+        standard_name: sea_water_salinity
       ice_u:
-        standard_name: "x_sea_ice_velocity"
+        standard_name: x_sea_ice_velocity
       ice_v:
-        standard_name: "y_sea_ice_velocity"
-      ice_thickness:
-        standard_name: "sea_ice_thickness"
-      ice_concentration:
-        standard_name: "sea_ice_area_fraction"
+        standard_name: y_sea_ice_velocity
+      mbathy:
+        standard_name: sea_floor_depth_below_sea_level
+      tmask:
+        standard_name: land_binary_mask
+      
 
   # Coordinates to add to each variable in the combined dataset.
   coords_to_add:
@@ -124,18 +127,19 @@ transformations:
     w: ["X", "Y"]
     temperature: ["X", "Y"]
     salinity: ["X", "Y"]
+    ocean_mixed_layer_thickness: ["X", "Y"]
     ice_u: ["X", "Y"]
     ice_v: ["X", "Y"]
 
   # Slice dataset to region of interest.
   slicing:
     region_of_interest:
-      X: [116, 430]
-      Y: [520, 750]
+      X: [0, 593]
+      Y: [330, 799]
 
   # Keep only selected variables and coordinates.
   keep:
-    variables: ["u", "v", "w", "temperature", "salinity", "sossheig", "land_binary_mask", "depth", "ice_u", "ice_v", "ice_thickness", "ice_concentration"]
+    variables: ["u", "v", "w", "temperature", "salinity", "depth", "ice_u", "ice_v", "ice_thickness", "ice_concentration", "sossheig", "ocean_mixed_layer_thickness", "mbathy", "tmask"]
     coords: ["X", "Y", "depth", "time_counter", "time_centered", "lon", "lat"]
 
 # =============================================
@@ -144,10 +148,10 @@ transformations:
 xarray:
   engine: netcdf4               # Engine for reading NetCDF
   reader:
-    combine: "by_coords"       # Combine multiple files by coordinates
-    data_vars: "all"           # Load all variables
+    combine: by_coords       # Combine multiple files by coordinates
+    data_vars: minimal           # Load all variables
   chunks:
-    time_counter: 10
+    time_counter: 100
 
 # =============================================
 # Output configuration

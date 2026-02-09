@@ -1,24 +1,20 @@
 from dataclasses import dataclass
 from pathlib import Path
 import yaml
+from typing import List
 
 
 @dataclass
 class InputData:
-    data_paths: dict
-
-
-@dataclass
-class VariableConfig:
-    source_var: str
-    dims_mapping: dict
+    grid_file_paths: dict
+    additional_paths: dict
 
 
 @dataclass
 class Interpolation:
     target_grid: str
     target_reference_variable: str
-    variables: dict[str, VariableConfig]
+    variables: List[dict]
 
 
 @dataclass
@@ -75,10 +71,12 @@ class Files:
     animation: str
     log: str
 
+
 @dataclass
 class Output:
     directory: str
     file_name: str
+
 
 @dataclass
 class ConfigReader:
@@ -93,18 +91,17 @@ class ConfigReader:
         with open(path, "r") as f:
             data = yaml.safe_load(f)
 
-        variables = {k: VariableConfig(**v) for k, v in data["transformations"]["interpolation"]["variables"].items()}
-
         return cls(
             input_data=InputData(
-                data_paths=data["input_data"]["data_paths"],
+                grid_file_paths=data["input_data"]["grid_file_paths"],
+                additional_paths=data["input_data"]["additonal_paths"],
             ),
             transformations=Transformations(
                 combine_period=data["transformations"]["combine_period"],
                 interpolation=Interpolation(
                     data["transformations"]["interpolation"]["target_grid"],
                     data["transformations"]["interpolation"]["target_reference_variable"],
-                    variables,
+                    data["transformations"]["interpolation"]["variables"],
                 ),
                 combination=data["transformations"]["combination"],
                 renaming=data["transformations"]["renaming"],
@@ -118,5 +115,5 @@ class ConfigReader:
                 reader=Reader(**data["xarray"]["reader"]),
                 chunks=data["xarray"]["chunks"],
             ),
-            output=Output(**data["output"])
+            output=Output(**data["output"]),
         )

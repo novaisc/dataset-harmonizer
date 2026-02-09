@@ -28,31 +28,6 @@ class DatasetHandler:
 
         return ds
 
-    def __add_mask(self, ds: xr.Dataset, mask_ds: xr.Dataset) -> xr.Dataset:
-        mask = mask_ds["tmask"].fillna(0).astype(int)
-
-        time_len = ds["time_counter"].size
-        depth_len = ds["deptht"].size
-        Y_len = ds["Y"].size
-        X_len = ds["X"].size
-
-        mask_broadcasted = xr.DataArray(
-            np.broadcast_to(mask.values, (time_len, depth_len, Y_len, X_len)),
-            dims=["time_counter", "deptht", "Y", "X"],
-            coords={
-                "time_counter": ds["time_counter"],
-                "deptht": ds["deptht"],
-                "Y": ds["Y"],
-                "X": ds["X"],
-            },
-            attrs={"standard_name": "land_binary_mask"},
-        )
-
-        ds["land_binary_mask"] = mask_broadcasted
-        ds["land_binary_mask"] = ds["land_binary_mask"].fillna(0).astype(int)
-
-        return ds
-
     def __clean_dataset(self, ds: xr.Dataset) -> xr.Dataset:
         vars_to_drop = [v for v in ds.data_vars if v not in self.vars_to_keep]
         ds = ds.drop_vars(vars_to_drop)
@@ -64,7 +39,6 @@ class DatasetHandler:
 
     def interpolate(self, da: xr.DataArray, dimension_slice_start: dict, dimension_slice_end: dict) -> xr.DataArray:
         interpolated_array = 0.5 * (da.isel(**dimension_slice_start) + da.isel(**dimension_slice_end))
-
         return interpolated_array
 
     def __fill_values(self, arr: xr.DataArray, dimension: str, target_dim_size: int) -> xr.DataArray:
@@ -115,15 +89,21 @@ class DatasetHandler:
 
     def __run_interpolation(self, datasets: List[xr.Dataset]):
         target_ds = datasets[self.target_grid]
-        datasets_to_pop = []
-        for var, ds in datasets.items():
-            if not var == self.target_grid and var in self.interpolation_variables:
-                variable_dim, target_dim = next(iter(self.interpolation_variables[var].dims_mapping.items()))
+        datasets_to_pop = set()
+
+        for grid_name, ds in datasets.items():
+            if (grid_name == self.target_grid) or (grid_name not in self.interpolation_variables):
+                continue
+
+            for source_var_and_dims_mapping_dict in self.interpolation_variables[grid_name]:
+                source_var = source_var_and_dims_mapping_dict["source_var"]
+                dims_mapping = source_var_and_dims_mapping_dict["dims_mapping"]
+                variable_dim, target_dim = next(iter(dims_mapping.items()))
                 dimension_slice_start = {variable_dim: slice(0, -1)}
                 dimension_slice_end = {variable_dim: slice(1, None)}
 
                 interpolated_data_array = self.interpolate(
-                    da=ds[self.interpolation_variables[var].source_var],
+                    da=ds[source_var],
                     dimension_slice_start=dimension_slice_start,
                     dimension_slice_end=dimension_slice_end,
                 )
@@ -132,13 +112,13 @@ class DatasetHandler:
                     interpolated_data_array, variable_dim, target_ds[target_dim].size
                 )
 
-                target_ds[var.lower()] = xr.DataArray(
+                target_ds[source_var] = xr.DataArray(
                     interpolated_data_array,
                     dims=target_ds[self.target_reference_variable].dims,
                     coords=target_ds[self.target_reference_variable].coords,
                 )
 
-                datasets_to_pop.append(var)
+                datasets_to_pop.add(grid_name)
 
         return datasets_to_pop
 
@@ -176,21 +156,49 @@ class DatasetHandler:
             ds[dim] = ds[dim].astype("int32")
         return ds
 
+    # TODO: make this function generic
+    def __add_mesh_file(self, ds, additional_datasets):
+        mask_ds = additional_datasets["mask"]
+        ds["nav_lat_grid_T"] = mask_ds["nav_lat"]
+        ds["nav_lon_grid_T"] = mask_ds["nav_lon"]
+        ds["nav_lat_grid_T"] = ds["nav_lat_grid_T"].rename({"y": "y_grid_T", "x": "x_grid_T"})
+        ds["nav_lon_grid_T"] = ds["nav_lon_grid_T"].rename({"y": "y_grid_T", "x": "x_grid_T"})
+        ds["mbathy"] = mask_ds["mbathy"]
+        ds["tmask"] = mask_ds["tmask"]
+        ds["mbathy"] = ds["mbathy"].rename({"y": "y_grid_T", "x": "x_grid_T"})
+        ds["tmask"] = 1 - ds["tmask"]
+        ds["tmask"] = ds["tmask"].rename({"y": "y_grid_T", "x": "x_grid_T"}).isel(t=0, z=0)
 
-    def create_combined_dataset(self, datasets: List[xr.Dataset]) -> xr.Dataset:
+        # ds["votemper"] = ds["votemper"].fillna(-0)
+        # ds["vosaline"] = ds["vosaline"].fillna(-0)
+        # ds["vomecrty"] = ds["vomecrty"].fillna(-0)
+        # ds["vozocrtx"] = ds["vozocrtx"].fillna(-0)
+        # ds["vovecrtz"] = ds["vovecrtz"].fillna(-0)
+        # ds["sohmld"] = ds["sohmld"].fillna(-0)
+        # ds["sossheig"] = ds["sossheig"].fillna(-0)
+
+        return ds
+
+    def create_combined_dataset(self, grid_datasets: dict, additional_datasets: dict) -> xr.Dataset:
         start = time()
         print("Starting interpolation...")
-        datasets_to_pop = self.__run_interpolation(datasets)
+        datasets_to_pop = self.__run_interpolation(grid_datasets)
         end = time()
         print(f"Interpolation took {end - start} seconds")
 
-        self.__pop_datasets(datasets, datasets_to_pop)
+        self.__pop_datasets(grid_datasets, datasets_to_pop)
 
         start = time()
         print("Starting dataset unification...")
-        ds = self.__unify_datasets(datasets)
+        ds = self.__unify_datasets(grid_datasets)
         end = time()
         print(f"Dataset unification took {end - start} seconds")
+
+        start = time()
+        print("Starting mesh addition...")
+        ds = self.__add_mesh_file(ds, additional_datasets)
+        end = time()
+        print(f"Mesh addition took {end - start} seconds")
 
         start = time()
         print("Starting renaming...")
